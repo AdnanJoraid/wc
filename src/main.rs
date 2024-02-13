@@ -1,13 +1,6 @@
-/*
-* The goal of this project
-* ccwc -c test.txt -> # bytes
-* ccwc -l text.txt -> # ines
-* ccwc -w text.txt -> # words
-* ccwc -m test.txt -> # characters
-*/
 use std::{
-    fs::{metadata, File},
-    io::Read,
+    fs::File,
+    io::{self, BufRead, BufReader},
     str::FromStr,
 };
 #[derive(Debug)]
@@ -39,30 +32,55 @@ struct Cli {
 
 impl Cli {
     pub fn execute_command(&self) -> u64 {
-        println!("Here is the pattern: {:?}", self.pattern);
         match self.pattern {
-            CliOption::C => Self::execute_bytes_count(&self).try_into().unwrap(),
-            CliOption::L => Self::execute_lines_count(),
-            CliOption::W => Self::execute_words_count(),
-            CliOption::M => Self::execute_chars_count(),
-            _ => 0,
+            CliOption::C => Self::execute_bytes_count(&self).unwrap_or_else(|e| {
+                eprint!("Error while executing command -c: {}", e);
+                0
+            }),
+            CliOption::L => Self::execute_lines_count(&self).unwrap_or_else(|e| {
+                eprint!("Error while executing command -l: {}", e);
+                0
+            }),
+            CliOption::W => Self::execute_words_count(&self).unwrap_or_else(|e| {
+                eprint!("Error while executing command -w: {}", e);
+                0
+            }),
+            CliOption::M => Self::execute_chars_count(&self).unwrap_or_else(|e| {
+                eprint!("Error while executing command -m: {}", e);
+                0
+            }),
         }
     }
 
-    fn execute_bytes_count(&self) -> u64 {
-        let file = File::open(&self.path).unwrap();
-        let metadata = file.metadata().unwrap();
-        return metadata.len();
+    fn execute_bytes_count(&self) -> Result<u64, io::Error> {
+        let file = File::open(&self.path)?;
+        let metadata = file.metadata()?;
+        return Ok(metadata.len());
     }
-    //testing return below
-    fn execute_lines_count() -> u64 {
-        3
+
+    fn execute_lines_count(&self) -> Result<u64, io::Error> {
+        let file = File::open(&self.path)?;
+        let reader = BufReader::new(file);
+        let lines_count = reader.lines().count();
+        return Ok(lines_count as u64);
     }
-    fn execute_words_count() -> u64 {
-        4
+    fn execute_words_count(&self) -> Result<u64, io::Error> {
+        let file = File::open(&self.path)?;
+        let reader = BufReader::new(file);
+        let mut count = 0;
+        for line in reader.lines() {
+            count += line?.split_whitespace().count();
+        }
+        return Ok(count as u64);
     }
-    fn execute_chars_count() -> u64 {
-        5
+    fn execute_chars_count(&self) -> Result<u64, io::Error> {
+        let file = File::open(&self.path)?;
+        let reader = BufReader::new(file);
+        let mut char_count = 0;
+        for line in reader.lines() {
+            char_count += line?.split("").count();
+        }
+        return Ok(char_count as u64);
     }
 }
 
