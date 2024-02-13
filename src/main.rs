@@ -3,9 +3,6 @@ use crate::wcli::{cli::Cli, cli_option::CliOption};
 fn main() {
     let pattern = std::env::args().nth(1).expect("No pattern given");
     let path = std::env::args().nth(2).expect("no path given");
-    if path.is_empty() {
-        println!("Empty here");
-    }
     let cli_command = pattern.parse::<CliOption>().ok();
     if let Some(pattern) = cli_command {
         let cli = Cli {
