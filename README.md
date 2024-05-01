@@ -9,5 +9,3 @@ Currently supports the options:
 
 You can run the cli by running:
 - cargo run -- -option  test.txt 
-
-**note**: I'm learning Rust at the moment by making small projects like this one, which is the reason behind the beautiful amount of unwrap() and other weird lines of code.
